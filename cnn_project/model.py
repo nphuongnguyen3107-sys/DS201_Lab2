@@ -228,7 +228,7 @@ def build_model(model_name: str, num_classes: int = 21, in_ch: int = 3, img_size
         return PretrainedResnet(num_classes=num_classes, freeze_backbone=False)
     else:
         raise ValueError(
-            f"Không hỗ trợ mô hình '{model_name}'. Các tùy chọn: {list(MODEL_DEFAULTS.keys())}"
+            f"Unsupported model '{model_name}'. Options: {list(MODEL_DEFAULTS.keys())}"
         )
 
 __all__ = [
