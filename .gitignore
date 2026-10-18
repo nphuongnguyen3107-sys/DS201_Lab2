@@ -1,0 +1,74 @@
+# ==============================================================================
+# DS201 - Deep Learning: Lab 2 CNN - Git Ignore Configuration
+# ==============================================================================
+
+# 1. Dataset & Archive files (Tuyệt đối không push file dữ liệu nặng)
+VinaFood21/
+data/
+dataset/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# 2. Model weights & checkpoints (Tránh vượt quá giới hạn 100MB của GitHub)
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+outputs/*.pt
+outputs/*.pth
+outputs/*.bin
+checkpoints/
+
+# 3. Python cache & environment
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 4. Jupyter Notebook checkpoints & autosaves
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# 5. OS & IDE artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 6. Local course materials (Tài liệu gốc đề bài)
+*.docx
+*.pdf
+DS201_Lab2_Student_PyTorch.ipynb
