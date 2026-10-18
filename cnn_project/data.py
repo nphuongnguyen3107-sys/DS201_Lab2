@@ -1,18 +1,14 @@
+# Tiền xử lý và nạp dữ liệu 
+
 from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
-# Chuẩn hoá ImageNet mặc định cho toàn bộ mô hình
 MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
-
+# Tạo bộ biến đổi ảnh: train có augment, val/test chỉ resize chuẩn hoá
 def build_transforms(img_size, augment=True):
-    """
-    Tạo hai bộ transforms cho train và val/test.
-    Nếu augment=True: áp dụng RandomResizedCrop, Flip, Rotation, ColorJitter.
-    Nếu augment=False: chỉ resize và chuẩn hoá (phục vụ thí nghiệm so sánh của Bài 3).
-    """
     if augment:
         train_tf = transforms.Compose([
             transforms.RandomResizedCrop(img_size, scale=(0.7, 1.0)),
@@ -28,7 +24,6 @@ def build_transforms(img_size, augment=True):
             transforms.ToTensor(),
             transforms.Normalize(MEAN, STD),
         ])
-
     eval_tf = transforms.Compose([
         transforms.Resize((img_size, img_size)),
         transforms.ToTensor(),
@@ -36,22 +31,16 @@ def build_transforms(img_size, augment=True):
     ])
     return train_tf, eval_tf
 
-
+# Tạo DataLoader nạp dữ liệu train & val 
 def build_train_val_loaders(data_root, img_size, batch_size=32,
                             augment=True, val_ratio=0.1, num_workers=2, seed=42):
-    """
-    Tạo DataLoader cho tập train và validation.
-    Nếu không có sẵn thư mục 'val/', tự động trích val_ratio (mặc định 10%) từ tập train.
-    """
     root = Path(data_root)
     train_tf, eval_tf = build_transforms(img_size, augment=augment)
-
     if (root / "val").is_dir():
         train_ds = datasets.ImageFolder(root / "train", transform=train_tf)
         val_ds = datasets.ImageFolder(root / "val", transform=eval_tf)
         classes = train_ds.classes
     else:
-        # Tách validation từ train nhưng val_ds dùng eval_tf (không bị augment)
         full_train = datasets.ImageFolder(root / "train", transform=train_tf)
         full_eval = datasets.ImageFolder(root / "train", transform=eval_tf)
         g = torch.Generator().manual_seed(seed)
@@ -60,18 +49,14 @@ def build_train_val_loaders(data_root, img_size, batch_size=32,
         train_ds = Subset(full_train, idx[n_val:])
         val_ds = Subset(full_eval, idx[:n_val])
         classes = full_train.classes
-
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
                           num_workers=num_workers, pin_memory=torch.cuda.is_available())
     val_dl = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
                         num_workers=num_workers, pin_memory=torch.cuda.is_available())
     return train_dl, val_dl, classes
 
-
+# Tạo DataLoader nạp tập test để đánh giá mô hình sau khi huấn luyện
 def build_test_loader(data_root, img_size, batch_size=32, num_workers=2):
-    """
-    Tạo DataLoader cho tập test.
-    """
     _, eval_tf = build_transforms(img_size, augment=False)
     test_ds = datasets.ImageFolder(Path(data_root) / "test", transform=eval_tf)
     test_dl = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
