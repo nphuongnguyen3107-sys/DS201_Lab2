@@ -76,8 +76,7 @@ DS201_Lab2_CNN/
     ├── engine.py                # Hàm train_one_epoch và evaluate
     ├── train.py                 # Script huấn luyện đa mô hình qua dòng lệnh (CLI)
     ├── evaluate.py              # Script đánh giá mô hình trên tập test và vẽ ma trận nhầm lẫn
-    ├── requirements.txt         # Danh sách thư viện phụ thuộc
-    └── README.md                # Hướng dẫn chi tiết sử dụng cnn_project
+    └── requirements.txt         # Danh sách thư viện phụ thuộc
 ```
 
 ---
