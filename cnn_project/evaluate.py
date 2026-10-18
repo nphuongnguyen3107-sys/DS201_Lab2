@@ -5,7 +5,7 @@ import torch.nn as nn
 from sklearn.metrics import classification_report, confusion_matrix, precision_score, recall_score, f1_score
 from data import build_test_loader
 from engine import evaluate
-from models import build_model
+from model import build_model
 
 def get_args():
     p = argparse.ArgumentParser()

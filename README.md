@@ -66,13 +66,8 @@ DS201_Lab2_CNN/
 │   └── confusion_matrix_resnet50.png
 │
 └── cnn_project/                 # Module mã nguồn chuẩn hóa (hỗ trợ cả 4 mô hình qua CLI)
-    ├── models/                  # Định nghĩa toàn bộ 4 kiến trúc mạng
-    │   ├── lenet.py             # LeNet-5 (AvgPool / MaxPool)
-    │   ├── googlenet.py         # GoogLeNet rút gọn (InceptionBlock + GAP)
-    │   ├── resnet18.py          # ResNet-18 (BasicBlock, 4 stages)
-    │   ├── resnet50.py          # Pretrained ResNet-50 (Feature Extraction / Fine-Tuning)
-    │   └── factory.py           # Factory khởi tạo mô hình tự động theo tên
     ├── data.py                  # Pipeline xử lý dữ liệu (Transforms, DataLoader, chia tập val)
+    ├── model.py                 # Chứa toàn bộ 4 kiến trúc: LeNet-5, GoogLeNet, ResNet-18, ResNet-50
     ├── engine.py                # Hàm train_one_epoch và evaluate
     ├── train.py                 # Script huấn luyện đa mô hình qua dòng lệnh (CLI)
     ├── evaluate.py              # Script đánh giá mô hình trên tập test và vẽ ma trận nhầm lẫn

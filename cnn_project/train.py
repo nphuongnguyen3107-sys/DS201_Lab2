@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from data import build_train_val_loaders
 from engine import evaluate, train_one_epoch
-from models import build_model, get_model_defaults, n_params
+from model import build_model, get_model_defaults, n_params
 
 
 def get_args():
