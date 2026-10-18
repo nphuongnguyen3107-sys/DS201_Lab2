@@ -65,14 +65,19 @@ DS201_Lab2_CNN/
 │   ├── resnet50_loss_curves.png
 │   └── confusion_matrix_resnet50.png
 │
-└── lenet_project/               # Module mã nguồn chuẩn hóa (áp dụng cho LeNet-5)
+└── cnn_project/                 # Module mã nguồn chuẩn hóa (hỗ trợ cả 4 mô hình qua CLI)
+    ├── models/                  # Định nghĩa toàn bộ 4 kiến trúc mạng
+    │   ├── lenet.py             # LeNet-5 (AvgPool / MaxPool)
+    │   ├── googlenet.py         # GoogLeNet rút gọn (InceptionBlock + GAP)
+    │   ├── resnet18.py          # ResNet-18 (BasicBlock, 4 stages)
+    │   ├── resnet50.py          # Pretrained ResNet-50 (Feature Extraction / Fine-Tuning)
+    │   └── factory.py           # Factory khởi tạo mô hình tự động theo tên
     ├── data.py                  # Pipeline xử lý dữ liệu (Transforms, DataLoader, chia tập val)
-    ├── model.py                 # Định nghĩa kiến trúc mô hình LeNet-5
     ├── engine.py                # Hàm train_one_epoch và evaluate
-    ├── train.py                 # Script huấn luyện qua dòng lệnh (CLI)
+    ├── train.py                 # Script huấn luyện đa mô hình qua dòng lệnh (CLI)
     ├── evaluate.py              # Script đánh giá mô hình trên tập test và vẽ ma trận nhầm lẫn
     ├── requirements.txt         # Danh sách thư viện phụ thuộc
-    └── README.md                # Hướng dẫn chi tiết sử dụng lenet_project
+    └── README.md                # Hướng dẫn chi tiết sử dụng cnn_project
 ```
 
 ---
@@ -100,18 +105,24 @@ pip install transformers scikit-learn seaborn matplotlib tqdm pandas
 2. Nếu dùng Colab, hãy bật **GPU T4** (`Runtime` -> `Change runtime type` -> `T4 GPU`).
 3. Chạy tuần tự các ô cell từ trên xuống dưới. Toàn bộ đồ thị loss và bảng chỉ số sẽ được hiển thị trực tiếp.
 
-### Cách 2: Huấn luyện qua dòng lệnh (Terminal với `lenet_project`)
+### Cách 2: Huấn luyện qua dòng lệnh (Terminal với `cnn_project`)
 ```bash
-cd lenet_project
+cd cnn_project
 
-# Kiểm tra kiến trúc và số chiều tensor LeNet-5
-python model.py
+# 1. Huấn luyện LeNet-5 (AvgPool)
+python train.py --model lenet --data_root ../VinaFood21 --epochs 20
 
-# Huấn luyện mô hình LeNet-5 (20 epochs)
-python train.py --data_root /path/to/VinaFood21 --epochs 20 --img_size 64 --batch_size 32
+# 2. Huấn luyện GoogLeNet rút gọn
+python train.py --model googlenet --data_root ../VinaFood21 --epochs 20
+
+# 3. Huấn luyện ResNet-18 (có Augmentation)
+python train.py --model resnet18 --data_root ../VinaFood21 --epochs 20
+
+# 4. Huấn luyện ResNet-50 Fine-Tuning
+python train.py --model resnet50_ft --data_root ../VinaFood21 --epochs 20
 
 # Đánh giá checkpoint tốt nhất trên tập test
-python evaluate.py --data_root /path/to/VinaFood21 --ckpt outputs/best.pt
+python evaluate.py --ckpt outputs/lenet/best.pt --data_root ../VinaFood21
 ```
 
 ---
