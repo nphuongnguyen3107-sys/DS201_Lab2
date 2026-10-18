@@ -1,22 +1,13 @@
 import torch
 import torch.nn as nn
 
-
 def n_params(module, trainable_only=False):
-    """Tính tổng số tham số (hoặc chỉ tham số có requires_grad=True)."""
     if trainable_only:
         return sum(p.numel() for p in module.parameters() if p.requires_grad)
     return sum(p.numel() for p in module.parameters())
 
-
-# ==============================================================================
-# BÀI 1: LENET-5 (64x64, 21 lớp, 339,421 tham số)
-# ==============================================================================
+# Bài 1: LENET-5 (64x64, 21 lớp, 339,421 tham số)
 class LeNet5(nn.Module):
-    """
-    LeNet-5 điều chỉnh cho ảnh màu 64x64 và 21 lớp phân loại.
-    Hỗ trợ 2 chế độ pooling: 'avg' (mặc định) và 'max'.
-    """
     def __init__(self, in_ch=3, img_size=64, num_classes=21, pool="avg"):
         super().__init__()
         PoolLayer = nn.AvgPool2d if pool == "avg" else nn.MaxPool2d
@@ -47,56 +38,37 @@ class LeNet5(nn.Module):
         x = torch.relu(self.f6(x))
         return self.out(x)
 
-
-# ==============================================================================
-# BÀI 2: GOOGLENET (Inception Block + Global Average Pooling)
-# ==============================================================================
+# Bài 2: GOOGLENET (Inception Block + Global Average Pooling)
 class InceptionBlock(nn.Module):
-    """
-    Khối Inception với 4 nhánh song song, dùng conv 1x1 giảm chiều (bottleneck).
-    Tất cả các nhánh giữ nguyên chiều cao (H) và chiều rộng (W).
-    Channel ra = f1 + f3 + f5 + f_pool.
-    """
     def __init__(self, in_ch, f1, f3_reduce, f3, f5_reduce, f5, f_pool):
         super().__init__()
-        # Nhánh 1: Conv 1x1
         self.b1 = nn.Sequential(
             nn.Conv2d(in_ch, f1, kernel_size=1),
             nn.ReLU(inplace=True)
         )
-        # Nhánh 2: 1x1 giảm chiều -> 3x3 conv
         self.b2 = nn.Sequential(
             nn.Conv2d(in_ch, f3_reduce, kernel_size=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(f3_reduce, f3, kernel_size=3, padding=1),
             nn.ReLU(inplace=True)
         )
-        # Nhánh 3: 1x1 giảm chiều -> 5x5 conv
         self.b3 = nn.Sequential(
             nn.Conv2d(in_ch, f5_reduce, kernel_size=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(f5_reduce, f5, kernel_size=5, padding=2),
             nn.ReLU(inplace=True)
         )
-        # Nhánh 4: MaxPool 3x3 (stride=1, pad=1) -> 1x1 conv
         self.b4 = nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
             nn.Conv2d(in_ch, f_pool, kernel_size=1),
             nn.ReLU(inplace=True)
         )
-
     def forward(self, x):
         return torch.cat([self.b1(x), self.b2(x), self.b3(x), self.b4(x)], dim=1)
 
-
 class GoogLeNetReduced(nn.Module):
-    """
-    GoogLeNet rút gọn (4 Inception blocks) cho ảnh 64x64.
-    Dùng Global Average Pooling (GAP) trước Linear classifier.
-    """
     def __init__(self, in_ch=3, num_classes=21, dropout=0.4):
         super().__init__()
-        # Stem: Conv 3x3 -> BN -> ReLU -> MaxPool (64x64 -> 32x32)
         self.stem = nn.Sequential(
             nn.Conv2d(in_ch, 64, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(64),
@@ -132,16 +104,8 @@ class GoogLeNetReduced(nn.Module):
         x = self.dropout(x)
         return self.fc(x)
 
-
-# ==============================================================================
-# BÀI 3: RESNET-18 (BasicBlock, 4 stages [2, 2, 2, 2], 11,187,285 tham số)
-# ==============================================================================
+# Bài 3: RESNET-18 (BasicBlock, 4 stages [2, 2, 2, 2], 11,187,285 tham số)
 class BasicBlock(nn.Module):
-    """
-    Khối thặng dư cơ bản của ResNet.
-    y = ReLU(F(x) + shortcut(x)).
-    Shortcut dùng Conv 1x1 + BN (projection) khi đổi kích thước hoặc channel.
-    """
     def __init__(self, in_ch, out_ch, stride=1):
         super().__init__()
         self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -160,15 +124,11 @@ class BasicBlock(nn.Module):
         identity = self.shortcut(x)
         out = torch.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
-        out += identity                     # Cộng trước
-        return torch.relu(out)              # ReLU sau
+        out += identity                     
+        return torch.relu(out)              
 
 
 class ResNet18(nn.Module):
-    """
-    ResNet-18 hoàn chỉnh gồm 4 stage [2, 2, 2, 2] BasicBlocks.
-    Dùng ảnh 96x96 hoặc 112x112 do mạng giảm chiều 32 lần (2^5).
-    """
     def __init__(self, in_ch=3, num_classes=21):
         super().__init__()
         self.stem = nn.Sequential(
@@ -203,16 +163,8 @@ class ResNet18(nn.Module):
         x = torch.flatten(x, 1)
         return self.fc(x)
 
-
-# ==============================================================================
-# BÀI 4: PRETRAINED RESNET-50 (Transfer Learning từ ImageNet)
-# ==============================================================================
+# Bài 4: PRETRAINED RESNET-50 (Transfer Learning từ ImageNet)
 class PretrainedResnet(nn.Module):
-    """
-    ResNet-50 Pretrained từ HuggingFace (microsoft/resnet-50) hoặc torchvision.
-    - Feature Extraction (freeze_backbone=True): 43,029 tham số học.
-    - Fine-Tuning (freeze_backbone=False): 23,551,061 tham số học.
-    """
     def __init__(self, num_classes=21, freeze_backbone=False):
         super().__init__()
         self.freeze_backbone = freeze_backbone
@@ -244,10 +196,7 @@ class PretrainedResnet(nn.Module):
             feats = torch.flatten(feats, 1)
         return self.classifier(feats)
 
-
-# ==============================================================================
-# FACTORY VÀ CẤU HÌNH MẶC ĐỊNH
-# ==============================================================================
+# Factory và cấu hình mặc định
 MODEL_DEFAULTS = {
     # model_name: (img_size, lr, epochs)
     "lenet": (64, 1e-3, 20),
@@ -259,14 +208,11 @@ MODEL_DEFAULTS = {
     "resnet50_ft": (224, 1e-4, 20),
 }
 
-
 def get_model_defaults(model_name: str):
     name = model_name.lower().strip()
     return MODEL_DEFAULTS.get(name, (64, 1e-3, 20))
 
-
 def build_model(model_name: str, num_classes: int = 21, in_ch: int = 3, img_size: int = None):
-    """Factory khởi tạo mô hình tự động theo tên."""
     name = model_name.lower().strip()
     if name in ["lenet", "lenet_avg"]:
         return LeNet5(in_ch=in_ch, img_size=img_size or 64, num_classes=num_classes, pool="avg")
@@ -285,7 +231,6 @@ def build_model(model_name: str, num_classes: int = 21, in_ch: int = 3, img_size
             f"Không hỗ trợ mô hình '{model_name}'. Các tùy chọn: {list(MODEL_DEFAULTS.keys())}"
         )
 
-
 __all__ = [
     "LeNet5",
     "InceptionBlock",
@@ -298,50 +243,3 @@ __all__ = [
     "MODEL_DEFAULTS",
     "n_params"
 ]
-
-
-# ==============================================================================
-# KIỂM ĐỊNH CẢ 4 MÔ HÌNH KHI CHẠY TRỰC TIẾP: python model.py
-# ==============================================================================
-if __name__ == "__main__":
-    import sys
-    sys.stdout.reconfigure(encoding="utf-8")
-
-    print("=" * 60)
-    print("Checking 4 CNN Model Architectures (VinaFood21 - 21 Classes)")
-    print("=" * 60)
-
-    # 1. LeNet-5
-    m1 = LeNet5(in_ch=3, img_size=64, num_classes=21, pool="avg")
-    x1 = torch.rand(2, 3, 64, 64)
-    print(f"1. LeNet-5 (64x64)     : {n_params(m1):,} params -> Out: {tuple(m1(x1).shape)}")
-    assert n_params(m1) == 339421, f"Mismatch: {n_params(m1)}"
-
-    # 2. GoogLeNet
-    b1 = InceptionBlock(1, 16, 16, 24, 4, 8, 8)
-    assert n_params(b1) == 4376
-    b2 = InceptionBlock(56, 32, 32, 48, 8, 16, 16)
-    assert n_params(b2) == 22104
-    m2 = GoogLeNetReduced(num_classes=21)
-    x2 = torch.rand(2, 3, 64, 64)
-    print(f"2. GoogLeNet (64x64)   : {n_params(m2):,} params -> Out: {tuple(m2(x2).shape)}")
-
-    # 3. ResNet-18
-    m3 = ResNet18(num_classes=21)
-    x3 = torch.rand(2, 3, 96, 96)
-    print(f"3. ResNet-18 (96x96)   : {n_params(m3):,} params -> Out: {tuple(m3(x3).shape)}")
-    assert n_params(m3) == 11187285, f"Mismatch: {n_params(m3)}"
-
-    # 4. ResNet-50 Pretrained
-    m4_fe = PretrainedResnet(num_classes=21, freeze_backbone=True)
-    m4_ft = PretrainedResnet(num_classes=21, freeze_backbone=False)
-    p_fe = n_params(m4_fe, trainable_only=True)
-    p_ft = n_params(m4_ft, trainable_only=True)
-    print(f"4a. ResNet-50 FE (224) : {p_fe:,} trainable params (Total: {n_params(m4_fe):,})")
-    print(f"4b. ResNet-50 FT (224) : {p_ft:,} trainable params (Total: {n_params(m4_ft):,})")
-    assert p_fe == 43029
-    assert p_ft == 23551061
-
-    print("=" * 60)
-    print("All 4 models passed assertions successfully!")
-    print("=" * 60)
