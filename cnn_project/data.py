@@ -35,6 +35,9 @@ def build_transforms(img_size, augment=True):
 def build_train_val_loaders(data_root, img_size, batch_size=32,
                             augment=True, val_ratio=0.1, num_workers=2, seed=42):
     root = Path(data_root)
+    if not (root / "train").is_dir() and (root / "VinaFood21" / "train").is_dir():
+        root = root / "VinaFood21"
+
     train_tf, eval_tf = build_transforms(img_size, augment=augment)
     if (root / "val").is_dir():
         train_ds = datasets.ImageFolder(root / "train", transform=train_tf)
@@ -57,8 +60,12 @@ def build_train_val_loaders(data_root, img_size, batch_size=32,
 
 # Tạo DataLoader nạp tập test để đánh giá mô hình sau khi huấn luyện
 def build_test_loader(data_root, img_size, batch_size=32, num_workers=2):
+    root = Path(data_root)
+    if not (root / "test").is_dir() and (root / "VinaFood21" / "test").is_dir():
+        root = root / "VinaFood21"
+
     _, eval_tf = build_transforms(img_size, augment=False)
-    test_ds = datasets.ImageFolder(Path(data_root) / "test", transform=eval_tf)
+    test_ds = datasets.ImageFolder(root / "test", transform=eval_tf)
     test_dl = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
                          num_workers=num_workers, pin_memory=torch.cuda.is_available())
     return test_dl, test_ds.classes

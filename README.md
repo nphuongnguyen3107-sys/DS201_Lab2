@@ -26,7 +26,7 @@ Bài thực hành hoàn thành đầy đủ 4 bài tập theo yêu cầu của �
 - Cài đặt khối `InceptionBlock` với 4 nhánh trích xuất đặc trưng đa tỉ lệ ($1\times1$, $3\times3$, $5\times5$, $3\times3 \text{ MaxPool}$), tích hợp conv $1\times1$ làm nút thắt cổ chai (*bottleneck*) để giảm chi phí tính toán.
   - Block 1 (in: 1, out: 56): 4,376 tham số.
   - Block 2 (in: 56, out: 112): 22,104 tham số.
-- Thiết kế mạng GoogLeNet rút gọn gồm 4 Inception blocks, dùng **Global Average Pooling (GAP)** thay cho lớp `Flatten` truyền thống, giúp nén feature map về vector 112 chiều, giảm mạnh tham số lớp phân loại và hạn chế hiện tượng overfitting.
+- Thiết kế mạng GoogLeNet rút gọn gồm 4 Inception blocks, dùng **Global Average Pooling (GAP)** thay cho lớp `Flatten` truyền thống, giúp nén feature map về vector 352 chiều, đạt tổng **414,709 tham số**, giảm mạnh tham số lớp phân loại và hạn chế hiện tượng overfitting.
 
 ### Bài 3: ResNet-18 From Scratch (Ảnh 96×96)
 - Cài đặt khối thặng dư `BasicBlock` với kết nối tắt (*skip connection / shortcut*) và chuẩn hóa theo lô (*BatchNorm2d*).
@@ -49,7 +49,7 @@ Bài thực hành hoàn thành đầy đủ 4 bài tập theo yêu cầu của �
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **1a** | LeNet-5 (AvgPool) | $64 \times 64$ | 339,421 | 339,421 | Kiến trúc CNN cổ điển, F5 chiếm 95.6% tham số |
 | **1b** | LeNet-5 (MaxPool) | $64 \times 64$ | 339,421 | 339,421 | So sánh khả năng trích xuất biên cạnh với AvgPool |
-| **2** | GoogLeNet rút gọn | $64 \times 64$ | ~1,100,000 | ~1,100,000 | 4 Inception blocks + GAP thay cho Flatten |
+| **2** | GoogLeNet rút gọn | $64 \times 64$ | 414,709 | 414,709 | 4 Inception blocks + GAP thay cho Flatten |
 | **3a** | ResNet-18 (No Aug) | $96 \times 96$ | 11,187,285 | 11,187,285 | Baseline khảo sát hiện tượng Overfitting |
 | **3b** | ResNet-18 (With Aug) | $96 \times 96$ | 11,187,285 | 11,187,285 | Áp dụng 4 kỹ thuật tăng cường dữ liệu |
 | **4a** | ResNet-50 (Feature Extraction) | $224 \times 224$ | 23,551,061 | 43,029 | Đóng băng backbone, huấn luyện nhanh |

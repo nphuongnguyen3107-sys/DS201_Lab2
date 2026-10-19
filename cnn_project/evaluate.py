@@ -44,17 +44,25 @@ def main():
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
 
     ckpt = torch.load(ckpt_path, map_location=device)
-    classes = ckpt["classes"]
-    img_size = ckpt.get("img_size", 64)
-    model_name = args.model or ckpt.get("model_name", "lenet")
-    state_dict = ckpt.get("model_state", ckpt.get("model"))
-
-    model = build_model(model_name, num_classes=len(classes), img_size=img_size).to(device)
-    model.load_state_dict(state_dict)
+    if isinstance(ckpt, dict) and ("model_state" in ckpt or "model" in ckpt):
+        classes = ckpt.get("classes")
+        img_size = ckpt.get("img_size", 64)
+        model_name = args.model or ckpt.get("model_name", "lenet")
+        state_dict = ckpt.get("model_state", ckpt.get("model"))
+    else:
+        state_dict = ckpt
+        img_size = 64
+        model_name = args.model or "lenet"
+        classes = None
 
     test_dl, test_classes = build_test_loader(
         args.data_root, img_size=img_size, batch_size=args.batch_size, num_workers=args.num_workers)
+    if classes is None:
+        classes = test_classes
     assert test_classes == classes, "Class mismatch between checkpoint and test folder."
+
+    model = build_model(model_name, num_classes=len(classes), img_size=img_size).to(device)
+    model.load_state_dict(state_dict)
 
     print(f"Evaluating {model_name} | Checkpoint: {ckpt_path.name} | Test set: {len(test_dl.dataset)} samples")
 

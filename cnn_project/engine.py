@@ -32,5 +32,5 @@ def evaluate(model, loader, criterion, device):
         total += yb.size(0)
         y_true += yb.cpu().tolist()
         y_pred += pred.cpu().tolist()
-    macro_f1 = f1_score(y_true, y_pred, average="macro")
+    macro_f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
     return running / total, correct / total, macro_f1, y_true, y_pred
