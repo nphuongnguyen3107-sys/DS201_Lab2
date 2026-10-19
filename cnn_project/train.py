@@ -2,14 +2,11 @@ import argparse
 import csv
 from pathlib import Path
 import time
-
 import torch
 import torch.nn as nn
-
 from data import build_train_val_loaders
 from engine import evaluate, train_one_epoch
 from model import build_model, get_model_defaults, n_params
-
 
 def get_args():
     p = argparse.ArgumentParser()
@@ -26,12 +23,10 @@ def get_args():
     p.add_argument("--out_dir", type=str, default="outputs")
     return p.parse_args()
 
-
 def save_loss_curve(history, path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-
     ep = [h["epoch"] for h in history]
     plt.figure(figsize=(7, 4))
     plt.plot(ep, [h["train_loss"] for h in history], label="Train Loss")
@@ -44,15 +39,12 @@ def save_loss_curve(history, path):
     plt.savefig(path, dpi=120, bbox_inches="tight")
     plt.close()
 
-
 def main():
     args = get_args()
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     def_size, def_lr, _ = get_model_defaults(args.model)
     img_size = args.img_size if args.img_size is not None else def_size
     lr = args.lr if args.lr is not None else def_lr
@@ -68,7 +60,6 @@ def main():
         args.data_root, img_size=img_size, batch_size=args.batch_size,
         augment=augment, num_workers=args.num_workers, seed=args.seed)
     num_classes = len(classes)
-
     model = build_model(args.model, num_classes=num_classes, img_size=img_size).to(device)
     print(f"Classes: {num_classes} | Train: {len(train_dl.dataset)} | Val: {len(val_dl.dataset)}")
     print(f"Params: total {n_params(model):,} | trainable {n_params(model, trainable_only=True):,}")
@@ -83,7 +74,7 @@ def main():
     best_f1 = -1.0
     start_time = time.time()
 
-    print("\nTraining...")
+    print("Training...")
     for ep in range(1, args.epochs + 1):
         ep_start = time.time()
         tr_loss, tr_acc = train_one_epoch(model, train_dl, criterion, optimizer, device)
@@ -112,7 +103,7 @@ def main():
               f"val_loss: {va_loss:.4f} val_acc: {va_acc:.4f} F1: {va_f1:.4f}{mark}")
 
     total_time = time.time() - start_time
-    print(f"\nDone in {total_time/60:.1f}m. Best Val F1: {best_f1:.4f} -> {model_out_dir / 'best.pt'}")
+    print(f"Done in {total_time/60:.1f}m. Best Val F1: {best_f1:.4f} -> {model_out_dir / 'best.pt'}")
 
     with open(model_out_dir / "history.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=history[0].keys())

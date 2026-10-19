@@ -55,6 +55,18 @@ Bài thực hành hoàn thành đầy đủ 4 bài tập theo yêu cầu của �
 | **4a** | ResNet-50 (Feature Extraction) | $224 \times 224$ | 23,551,061 | 43,029 | Đóng băng backbone, huấn luyện nhanh |
 | **4b** | ResNet-50 (Fine-Tuning) | $224 \times 224$ | 23,551,061 | 23,551,061 | Cập nhật toàn bộ mạng với learning rate nhỏ |
 
+### Bảng kết quả thực nghiệm thực tế trên tập Test (VinaFood21)
+
+| STT | Mô hình | Kích thước ảnh | Tham số cần học | Giây / Epoch | Test Accuracy | Test Macro-F1 | Đánh giá & Nhận xét |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **1a** | LeNet-5 (AvgPool) | $64 \times 64$ | 339,421 | 100.88s | 27.10% | 0.2581 | Overfitting nặng, Val loss tăng vọt lên ~7.8 |
+| **1b** | LeNet-5 (MaxPool) | $64 \times 64$ | 339,421 | 100.54s | 26.28% | 0.2376 | Hiệu năng tương đương AvgPool, vẫn overfitting |
+| **2** | GoogLeNet rút gọn | $64 \times 64$ | 414,709 | 104.14s | 44.39% | 0.4281 | Cải thiện vượt bậc (+17%), GAP giúp triệt tiêu nổ loss |
+| **3a** | ResNet-18 (No Aug) | $96 \times 96$ | 11,187,285 | 106.52s | 39.69% | 0.3925 | Mô hình sâu bị overfitting rõ rệt sau 5-8 epoch |
+| **3b** | ResNet-18 (With Aug)| $96 \times 96$ | 11,187,285 | 115.96s | 49.49% | 0.4758 | Tăng +9.8% Acc (+8.33% F1), kiểm soát overfitting |
+| **4a** | ResNet-50 (FE) | $224 \times 224$ | 43,029 | 125.84s | 62.36% | 0.6312 | Chỉ học classifier, tận dụng trích xuất đặc trưng ImageNet |
+| **4b** | ResNet-50 (Fine-Tuning)| $224 \times 224$ | 23,551,061 | 145.99s | **82.95%** | **0.8297** | Đạt hiệu năng cao nhất, nhận diện chính xác vượt trội |
+
 ---
 
 ## 4. Cấu trúc mã nguồn
