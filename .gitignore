@@ -7,7 +7,6 @@ VinaFood21/
 data/
 dataset/
 *.zip
-!cnn_project.zip
 *.tar
 *.tar.gz
 *.tgz

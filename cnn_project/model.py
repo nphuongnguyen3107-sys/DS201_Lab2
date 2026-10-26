@@ -6,7 +6,7 @@ def n_params(module, trainable_only=False):
         return sum(p.numel() for p in module.parameters() if p.requires_grad)
     return sum(p.numel() for p in module.parameters())
 
-# Bài 1: LENET-5 (64x64, 21 lớp, 339,421 tham số)
+# Bài 1: LeNet-5
 class LeNet5(nn.Module):
     def __init__(self, in_ch=3, img_size=64, num_classes=21, pool="avg"):
         super().__init__()
@@ -38,7 +38,7 @@ class LeNet5(nn.Module):
         x = torch.relu(self.f6(x))
         return self.out(x)
 
-# Bài 2: GOOGLENET (Inception Block + Global Average Pooling)
+# Bài 2: GoogLeNet
 class InceptionBlock(nn.Module):
     def __init__(self, in_ch, f1, f3_reduce, f3, f5_reduce, f5, f_pool):
         super().__init__()
@@ -104,7 +104,7 @@ class GoogLeNetReduced(nn.Module):
         x = self.dropout(x)
         return self.fc(x)
 
-# Bài 3: RESNET-18 (BasicBlock, 4 stages [2, 2, 2, 2], 11,187,285 tham số)
+# Bài 3: ResNet-18
 class BasicBlock(nn.Module):
     def __init__(self, in_ch, out_ch, stride=1):
         super().__init__()
@@ -163,7 +163,7 @@ class ResNet18(nn.Module):
         x = torch.flatten(x, 1)
         return self.fc(x)
 
-# Bài 4: PRETRAINED RESNET-50 (Transfer Learning từ ImageNet)
+# Bài 4: Pretrained ResNet-50
 class PretrainedResnet(nn.Module):
     def __init__(self, num_classes=21, freeze_backbone=False):
         super().__init__()
@@ -196,7 +196,7 @@ class PretrainedResnet(nn.Module):
             feats = torch.flatten(feats, 1)
         return self.classifier(feats)
 
-# Factory và cấu hình mặc định
+# Cấu hình mặc định
 MODEL_DEFAULTS = {
     # model_name: (img_size, lr, epochs)
     "lenet": (64, 1e-3, 20),
