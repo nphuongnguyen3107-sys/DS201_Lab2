@@ -6,6 +6,29 @@ def n_params(module, trainable_only=False):
         return sum(p.numel() for p in module.parameters() if p.requires_grad)
     return sum(p.numel() for p in module.parameters())
 
+def show(label, t):
+    """In shape của tensor (theo tài liệu Lab 2)."""
+    print(f"{label:<28} {tuple(t.shape)}")
+
+def layer_table(model, img=64, in_ch=3):
+    """Bảng shape và tham số từng layer của LeNet (theo Lab 2 B.3 Bước 2)."""
+    x = torch.zeros(1, in_ch, img, img)
+    rows, total = [], 0
+    for name, layer in [("C1", model.c1), ("S2", model.s2),
+                        ("C3", model.c3), ("S4", model.s4)]:
+        x = layer(x)
+        p = n_params(layer)
+        total += p
+        rows.append((name, "x".join(map(str, tuple(x.shape)[1:])), p))
+    x = x.flatten(1)
+    rows.append(("flatten", str(x.shape[1]), 0))
+    for name, layer in [("F5", model.f5), ("F6", model.f6), ("OUT", model.out)]:
+        x = layer(x)
+        p = n_params(layer)
+        total += p
+        rows.append((name, str(x.shape[1]), p))
+    return rows, total
+
 # Bài 1: LeNet-5
 class LeNet5(nn.Module):
     def __init__(self, in_ch=3, img_size=64, num_classes=21, pool="avg"):
@@ -241,5 +264,7 @@ __all__ = [
     "build_model",
     "get_model_defaults",
     "MODEL_DEFAULTS",
-    "n_params"
+    "n_params",
+    "show",
+    "layer_table"
 ]

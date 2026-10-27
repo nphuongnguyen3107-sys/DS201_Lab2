@@ -1,0 +1,5 @@
+Mô hình,Resize,Tham số,Giây/epoch,Accuracy,macro-F1,Ghi chú
+LeNet-5 điều chỉnh,64×64,"339,421",100.88,0.2710,0.2581,"AvgPool, 7 layers"
+GoogLeNet rút gọn,64×64,"414,709",104.14,0.4439,0.4281,"4 Inception blocks, GAP"
+ResNet-18 từ đầu*,96×96,"11,187,285",115.96,0.4949,0.4758,Chạy có Augmentation (No Aug: F1=0.3925)
+ResNet-50 pretrained*,224×224,"23,551,061",145.99,0.8295,0.8297,Fine-Tuning toàn mạng (Feature Ext: F1=0.6312)
