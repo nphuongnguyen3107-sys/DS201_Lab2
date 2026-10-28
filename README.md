@@ -14,7 +14,7 @@
 DS201_Lab2/
 ├── assignments.ipynb       # Jupyter Notebook chính chứa mã nguồn, kết quả huấn luyện và báo cáo
 ├── README.md               # Báo cáo tổng hợp và hướng dẫn chi tiết
-├── outputs/                # Lưu trữ checkpoint mô hình (*_best.pt), loss curves, confusion matrix
+├── outputs/                # Bảng kết quả tổng hợp (summary_comparison_table.csv); checkpoint (*.pt) và biểu đồ được lưu cục bộ (được .gitignore quản lý để tối ưu repo)
 └── cnn_project/            # Source code mô-đun hóa
     ├── data.py             # Pipeline nạp dữ liệu, transform (train/val riêng biệt), split seed
     ├── model.py            # Cài đặt các kiến trúc (LeNet-5, GoogLeNet, ResNet-18, ResNet-50)
@@ -32,8 +32,8 @@ Theo quy định bắt buộc trong bài giảng:
 1. **Quy trình xử lý dữ liệu 7 bước:** `ImageFolder` $\rightarrow$ `random_split` $\rightarrow$ `Resize + Normalize` $\rightarrow$ `DataLoader` $\rightarrow$ `Model` $\rightarrow$ `Loss (CE) + Optimizer (Adam)` $\rightarrow$ `Đánh giá Macro-F1`.
 2. **Cố định ngẫu nhiên (Fixed Seed):** Toàn bộ 4 bài thực hành đều chạy trên cùng một phép chia dữ liệu (Train/Val/Test) với `SEED = 42`. Nếu không cố định seed, bảng so sánh cuối bài không có giá trị đối chiếu khoa học.
 3. **Tách biệt Data Transform:**
-   - **Tập Train:** Áp dụng Data Augmentation gồm `RandomResizedCrop(scale=(0.7, 1.0))`, `RandomHorizontalFlip()`, `RandomRotation(15)`, `ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)`.
-   - **Tập Val và Test:** Tuyệt đối không dùng Augmentation, chỉ `Resize` và `Normalize` với chuẩn ImageNet `mean = [0.485, 0.456, 0.406]`, `std = [0.229, 0.224, 0.225]`.
+   - **Tập Train:** Áp dụng `Resize` và `Normalize` theo chuẩn ImageNet (`mean = [0.485, 0.456, 0.406]`, `std = [0.229, 0.224, 0.225]`). Riêng Bài 3 (chế độ có augmentation) bổ sung thêm `RandomResizedCrop(scale=(0.7, 1.0))`, `RandomHorizontalFlip()`, `RandomRotation(15)`, `ColorJitter(0.2, 0.2, 0.2)`.
+   - **Tập Val và Test:** Không dùng Augmentation, chỉ `Resize` và `Normalize`.
 4. **Chế độ đánh giá (Evaluation Mode):** Bắt buộc gọi `model.eval()` và `torch.no_grad()` trước khi đánh giá trên tập val/test để tắt chế độ ngẫu nhiên của Dropout và sử dụng thống kê tích lũy của BatchNorm.
 5. **Hệ thống độ đo (Metrics):**
    - **Độ đo chính:** **Macro-F1** (trung bình không trọng số của F1 trên 21 lớp, phản ánh chính xác hiệu năng khi phân bố số ảnh giữa các lớp không đều nhau).
@@ -91,9 +91,9 @@ Theo quy định bắt buộc trong bài giảng:
 
 ### 4.3. Bài 3\*: ResNet-18 huấn luyện từ đầu
 - **Kiến trúc:** ResNet-18 chuẩn `[2, 2, 2, 2]` BasicBlock, tổng cộng **11,187,285 tham số**. Ảnh đầu vào $96 \times 96$.
-- **Xác định Epoch tách đường giữa Train Loss và Val Loss (Hiện tượng Overfitting):**
-  - **Trường hợp KHÔNG Augmentation:** Trong 6 epoch đầu, Train Loss và Val Loss cùng giảm đều. **Bắt đầu từ Epoch 7 - 8**, hai đường tách nhau rõ rệt: Train Loss tiếp tục giảm mạnh từ 1.46 xuống 0.08 (Train Acc đạt $97.33\%$), trong khi Val Loss đảo chiều tăng vọt từ 1.82 lên trên 3.14. Đây là biểu hiện rõ rệt của **Overfitting nghiêm trọng** (mạng học thuộc lòng ảnh train nhưng mất tính khái quát).
-  - **Trường hợp CÓ Data Augmentation:** Train Loss và Val Loss giảm song song ổn định, Val Loss duy trì trong khoảng 1.42 - 1.55 suốt 20 epoch.
+- **Hiện tượng Overfitting và phân tích đường loss:**
+  - **Trường hợp KHÔNG Augmentation:** Trong 6 epoch đầu, Train Loss và Val Loss cùng giảm đều. Từ epoch 7 - 8, hai đường tách nhau rất rõ: Train Loss tiếp tục giảm sâu từ 1.46 xuống 0.08 (Train Acc đạt 97.33%), trong khi Val Loss đảo chiều tăng vọt từ 1.82 lên 3.14. Đây là biểu hiện quá khớp (overfitting) khi mạng học thuộc lòng tập train.
+  - **Trường hợp CÓ Data Augmentation:** Train Loss và Val Loss giảm song hành ổn định hơn. Val Loss giảm liên tục từ 2.68 (epoch 1) xuống 1.43 (epoch 19), và chỉ ở các epoch cuối mới dao động quanh mức 1.42 - 1.58. Tại epoch 20, cả Train Loss (1.08) và Val Loss (1.48) vẫn đang giảm đều, cho thấy mô hình chưa hoàn toàn hội tụ ở epoch 20 và có thể tiếp tục tăng độ chính xác nếu train thêm epoch.
 - **Chênh lệch Macro-F1 giữa 2 lần chạy:**
   - Có Augmentation: Macro-F1 = **0.4758** (Accuracy: **49.49%**).
   - Không Augmentation: Macro-F1 = **0.3925** (Accuracy: **39.69%**).
@@ -118,7 +118,7 @@ Theo quy định bắt buộc trong bài giảng:
 
 ## 5. Bảng so sánh bốn mô hình - Tổng kết
 
-Dưới đây là bảng tổng hợp kết quả chính thức của 4 mô hình thực nghiệm, :
+Dưới đây là bảng tổng hợp kết quả của 4 mô hình thực nghiệm:
 
 | Mô hình | Resize | Tham số | Giây/epoch | Accuracy | macro-F1 | Ghi chú cấu hình |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -131,26 +131,27 @@ Dưới đây là bảng tổng hợp kết quả chính thức của 4 mô hìn
 
 ## 6. Phân tích định lượng và Nhận xét chuyên sâu
 
-### 6.1. Ảnh hưởng của Kiến trúc (Ba dòng đầu: LeNet-5 vs GoogLeNet vs ResNet-18)
-- Chạy trên cùng seed 42, cùng phép chia dữ liệu:
-  - **LeNet-5:** Năng lực trích xuất đặc trưng rất yếu do chỉ có 2 lớp Conv $5\times 5$. Mạng bị "nghẽn cổ chai" tham số ở tầng fully-connected (F5 chiếm $95.6\%$ tham số toàn mạng), dẫn tới Macro-F1 chỉ dừng ở mức khiêm tốn $0.2581$.
-  - **GoogLeNet rút gọn:** Macro-F1 tăng vọt $+17.00\%$ (lên $0.4281$) dù tham số chỉ tăng $22\%$ và thời gian train mỗi epoch tương đương. Đó là nhờ khối Inception trích xuất đặc trưng đa độ phân giải song song và GAP loại bỏ lớp Dense cồng kềnh.
-  - **ResNet-18 từ đầu:** Kiến trúc 18 layers với Skip Connection giúp dòng gradient lưu thông trực tiếp, cho phép học các biểu diễn phức tạp hơn và đạt Macro-F1 $0.4758$. Tuy nhiên, việc huấn luyện 11.18M tham số từ đầu trên tập ảnh nhỏ rất dễ overfit nếu không có Data Augmentation.
+### 6.1. Ảnh hưởng của Kiến trúc (LeNet-5 vs GoogLeNet vs ResNet-18)
+- Chạy trên cùng seed 42 và cùng phép chia dữ liệu:
+  - **LeNet-5:** Năng lực trích xuất đặc trưng hạn chế do chỉ có 2 lớp Conv nhỏ ($5\times 5$), hơn 95% tham số dồn vào lớp Fully-Connected đầu tiên (F5). Vì vậy Macro-F1 chỉ đạt mức khiêm tốn 0.2581.
+  - **GoogLeNet rút gọn:** Macro-F1 tăng vọt +17.00% (lên 0.4281) dù tham số chỉ tăng 22% và thời gian train mỗi epoch tương đương. Khối Inception đa nhánh trích xuất đặc trưng ở nhiều thang đo và Global Average Pooling (GAP) loại bỏ lớp Dense cồng kềnh giúp mạng gọn nhẹ mà hiệu quả hơn nhiều.
+  - **ResNet-18 từ đầu:** Kiến trúc 18 layer với Residual Connection (đường tắt identity) giúp dòng gradient truyền tốt hơn, học được đặc trưng phức tạp hơn và đạt Macro-F1 0.4758. Tuy nhiên với 11.18M tham số trên tập ảnh nhỏ (~14k ảnh), mô hình rất dễ overfit nếu không có Data Augmentation.
 
-### 6.2. Ảnh hưởng của Transfer Learning (Dòng cuối so với ba dòng trên)
-- **Chênh lệch kết quả:** ResNet-50 Fine-Tuning đạt Macro-F1 **0.8297**, vượt trội hoàn toàn so với mô hình tốt nhất học từ đầu là ResNet-18 (**0.4758**), tức chênh lệch tới **$+35.39\%$** ($+0.3539$).
-- Ngay cả khi chỉ train classifier (Feature Extraction), Macro-F1 đã đạt **0.6312** (cao hơn ResNet-18 học từ đầu $+15.54\%$).
-- **Giải thích nguyên nhân cốt lõi:**
-  1. **Quy mô tập dữ liệu đích:** VinaFood21 chỉ có ~14k ảnh, không đủ lớn để một mạng sâu học hàng chục triệu tham số từ đầu mà không gặp rủi ro quá khớp.
-  2. **Chuyển giao tri thức thị giác (Feature Reuse):** 23.5 triệu tham số backbone của ResNet-50 đã được tối ưu trên 1.2 triệu ảnh ImageNet, trong đó có sẵn nhiều lớp thuộc miền thực phẩm. Các đặc trưng phổ quát (cạnh, kết cấu, màu sắc món ăn) đã rất tối ưu.
-  3. **Tốc độ hội tụ và độ ổn định:** Fine-tuning với learning rate nhỏ ($10^{-4}$) cho phép mô hình tinh chỉnh nhanh chóng và đạt độ chính xác cao chỉ sau 10 epoch.
+### 6.2. Ảnh hưởng của Transfer Learning (ResNet-50 so với học từ đầu)
+- **Chênh lệch kết quả:** ResNet-50 Fine-Tuning đạt Macro-F1 **0.8297** (Accuracy 82.95%), vượt trội so với mô hình học từ đầu tốt nhất là ResNet-18 (0.4758, chênh lệch +35.39%).
+- Ngay cả khi chỉ train classifier (Feature Extraction), Macro-F1 đã đạt **0.6312**, cao hơn ResNet-18 học từ đầu.
+- **Giải thích:**
+  1. **Quy mô tập dữ liệu:** VinaFood21 chỉ có ~14k ảnh, không đủ lớn để một mạng sâu học tốt hàng chục triệu tham số từ đầu mà không bị quá khớp.
+  2. **Trọng số Pretrained từ ImageNet:** 23.5 triệu tham số backbone của ResNet-50 đã được tối ưu sẵn trên 1.2 triệu ảnh ImageNet, các tầng trích xuất đặc trưng (cạnh, vân, màu sắc món ăn) đã rất tối ưu. Mô hình chỉ cần tinh chỉnh nhẹ với learning rate nhỏ ($10^{-4}$) là hội tụ rất nhanh và đạt độ chính xác cao.
 
-### 6.3. Kiểm chứng Giả thuyết dựa trên Confusion Matrix
-- **Giả thuyết:** Các món có bố cục và màu sắc tương tự nhau (nhóm món nước: phở, bún bò, bún riêu...) sẽ có tỉ lệ nhầm lẫn cao.
-- **Thực tế kiểm chứng:**
-  - Trên ma trận nhầm lẫn của LeNet-5 và GoogLeNet, nhóm các món nước (`bo-kho`, `ca-ri`, `canh-kho-qua`, `hoanh-thanh-nuoc`) và nhóm bánh mềm (`banh-can`, `banh-u`, `ha-cao`) có sự nhầm lẫn chéo rất lớn.
-  - Ngược lại, món có đặc trưng màu sắc/hình thái riêng biệt như **`canh-khoai-mo`** (màu tím đặc trưng) đạt F1 cao nhất trong mọi mô hình (F1 = $0.6139$ ở LeNet, $>0.95$ ở ResNet-50).
-  - Ở mô hình ResNet-50 Fine-Tuning, ma trận nhầm lẫn gom mạnh về đường chéo chính, tỉ lệ nhầm lẫn giữa các món nước giảm rõ rệt nhờ backbone sâu phân biệt được các chi tiết sợi bánh, nước dùng và rau ăn kèm.
+### 6.3. Phân tích ma trận nhầm lẫn (Confusion Matrix)
+- **Về các lớp dữ liệu và giả thuyết món nước:**
+  - Câu hỏi gợi ý trong đề có nhắc tới các món nước (*phở, bún bò, hủ tiếu...*). Tuy nhiên trong 21 lớp thực tế của VinaFood21 không có các món này. Nhóm món có nước dùng hoặc nước xốt trong tập dữ liệu gồm: `bo-kho`, `ca-ri`, `canh-kho-qua`, `canh-khoai-mo`, `hoanh-thanh-nuoc`, `pha-lau`.
+- **Thực tế kiểm chứng nhầm lẫn:**
+  - **Cặp món bị nhầm lẫn nhiều nhất:** Là **`ca-ri` và `bo-kho`**, do cả hai cùng có nước xốt vàng cam/nâu sệt, thịt cắt khối và rau củ (khoai tây, cà rốt). Vì vậy món `ca-ri` có điểm F1 thấp nhất ở hầu hết các mô hình (0.1250 ở ResNet-18, 0.3518 ở ResNet-50 FE, 0.5506 ở ResNet-50 FT). Ngoài ra món `goi-ga` (gà xé trộn bắp cải) cũng có tỷ lệ nhầm lẫn đáng kể (F1 chỉ đạt 0.7463 ở ResNet-50 FT).
+  - **Món `canh-kho-qua` không bị nhầm lẫn nhiều:** Ngược lại, món này luôn nằm trong **Top 3 F1 của tất cả các mô hình** (LeNet: 0.4584, GoogLeNet: 0.5891, ResNet-18: 0.6171, ResNet-50 FE: 0.7461, ResNet-50 FT: 0.9226) do khoanh khổ qua cắt khúc nhồi thịt màu xanh lá cây là đặc trưng thị giác rất riêng biệt và dễ nhận diện.
+  - **Món `canh-khoai-mo`:** Có màu tím đặc trưng nên đạt F1 cao nhất ở các mô hình học từ đầu (LeNet: 0.6139, GoogLeNet: 0.7978, ResNet-18 Aug: 0.7704). Ở ResNet-50, F1 của `canh-khoai-mo` đạt 0.7591 (bản FE, xếp sau `bap-nuong` 0.7942) và 0.9195 (bản FT, xếp sau `bap-nuong` 0.9574 và `canh-kho-qua` 0.9226). Món có F1 cao nhất ở ResNet-50 Fine-Tuning là `bap-nuong` (0.9574) nhờ cấu trúc bắp nướng mỡ hành có hạt tròn xếp hàng đặc thù.
+  - Ở mô hình ResNet-50 Fine-Tuning, ma trận nhầm lẫn gom rõ về đường chéo chính, tỷ lệ nhầm lẫn giữa các món giảm rõ rệt nhờ backbone sâu phân biệt tốt chi tiết từng món.
 
 ---
 
